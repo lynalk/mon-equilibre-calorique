@@ -212,3 +212,15 @@ body{font-weight:400}
 @media (max-width:360px){.trackers{grid-template-columns:1fr}}
 .macro{grid-template-columns:64px 1fr auto}
 .macro .num{white-space:nowrap}
+
+/* ----- Chiffres : police nette (Jost), chiffres alignés et à largeur fixe ----- */
+:root{--font-num:"Jost", system-ui, -apple-system, "Segoe UI", sans-serif}
+.num,.ring .big,.remain,.target-big,.stat b,.preview .k,.tracker-val,.balance b,.item .kcal,input[type="number"],.chart text{
+  font-family:var(--font-num);font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1,"lnum" 1}
+.ring .big{font-weight:500;font-size:1.85rem;letter-spacing:-.01em}
+.remain{font-weight:500;font-size:1.35rem}
+.target-big{font-weight:500;font-size:2.2rem}
+.tracker-val{font-weight:500;font-size:1.45rem}
+.balance b,.stat b{font-weight:500;font-size:1.05rem}
+.preview .k{font-weight:500;font-size:1.35rem}
+.item .kcal{font-weight:600}
