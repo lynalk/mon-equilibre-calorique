@@ -4,6 +4,8 @@ Compteur de calories précis et personnalisé, en français, pensé pour le tél
 
 ## Fonctions
 
+- **Premier lancement** : tout est à zéro (journal, pas, eau, progrès) tant que le profil n'est pas rempli et enregistré avec le bouton « Enregistrer mon profil ».
+
 - **Profil et besoins** : métabolisme de base par Mifflin-St Jeor, ou Katch-McArdle si la masse grasse est connue, multiplié par le coefficient d'activité puis ajusté selon l'objectif (de −500 à +500 kcal). Plancher de 1 200 kcal (femme) / 1 500 kcal (homme). Macros : protéines 1,6 à 1,8 g/kg, lipides 30 % des calories, glucides pour le reste.
 - **Journal** : 4 repas, total du jour comparé à l'objectif, navigation entre les jours, reprise d'un repas de la veille en un geste.
 - **Ajout d'aliments**, quatre façons :
@@ -23,9 +25,9 @@ Compteur de calories précis et personnalisé, en français, pensé pour le tél
 | Journal, profil, progrès | oui | oui |
 | Lecture du code-barres | oui | oui |
 | Base Open Food Facts (code-barres et recherche par nom) | non, le réseau de la page est bloqué : l'étiquette prend le relais | oui |
-| Analyse photo par IA | oui, sur le compte Claude de la personne, sans clé d'API | non |
+| Analyse photo par IA | oui, sur le compte Claude de la personne, sans clé d'API | oui, une fois le relais IA en ligne (voir [RELAIS-IA.md](RELAIS-IA.md)) |
 
-L'analyse IA passe par la capacité `sample` des pages Claude (`js/ai.js`). La page doit être publiée avec `capabilities: {sample: {images: true}}`.
+Dans Claude, l'analyse IA passe par la capacité `sample` (`js/ai.js`), la page étant publiée avec `capabilities: {sample: {images: true}}`. Ailleurs, elle passe par le relais `relay/` (Cloudflare Worker) dont l'adresse se règle dans `js/config.js`. La clé Anthropic reste un secret Cloudflare et n'est jamais dans le dépôt.
 
 Pour publier en site web et l'installer sur le téléphone, voir [PUBLIER.md](PUBLIER.md).
 
@@ -35,7 +37,7 @@ Le même code est emballé avec [Capacitor](https://capacitorjs.com) : projet Xc
 
 - tout marche hors ligne, sauf Open Food Facts (polices, lecteur de code-barres et base d'aliments sont dans l'appli) ;
 - les pas peuvent être lus dans **Apple Santé** (iPhone, Apple Watch) ou **Health Connect** (Android), via `@capgo/capacitor-health` (`js/native.js`), en lecture seule ;
-- l'onglet Photo IA est masqué : l'IA des pages Claude n'existe pas dans une appli. Il faudra un petit serveur avec une clé d'API pour l'y remettre.
+- l'onglet Photo IA n'apparaît que si le relais IA est en ligne (`RELAY_URL` dans `js/config.js`) ; sinon il est masqué. Le relais accepte déjà les origines `capacitor://localhost` (iOS) et `https://localhost` (Android).
 
 Sur le Mac, après chaque changement du code web :
 
@@ -55,7 +57,9 @@ Icône et écran de démarrage : sources dans `assets/`, régénérés avec `npx
 - `img/` : logo Le Reformer by LK et icônes
 - `manifest.webmanifest` : installation sur l'écran d'accueil
 - `js/barcode.js` : décodage (BarcodeDetector, sinon ZXing) et recherche Open Food Facts
-- `js/ai.js` : analyse photo du plat et lecture d'étiquette
+- `js/config.js` : adresse du relais IA
+- `js/ai.js` : analyse photo du plat et lecture d'étiquette (Claude ou relais)
+- `relay/` : relais IA (Cloudflare Worker) qui garde la clé Anthropic secrète
 - `js/app.js` : état, calculs et rendu
 - `js/native.js` : réglages de l'appli installée (pas depuis la santé du téléphone)
 - `js/vendor/` : ZXing et Capacitor, copiés pour marcher hors ligne

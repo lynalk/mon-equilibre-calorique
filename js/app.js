@@ -23,18 +23,11 @@ function entryFrom(f, g, meal) {
   return { id: newId(), meal: meal, foodId: f.id, name: f.name, grams: g,
     kcal: Math.round(f.kcal * r), p: +(f.p * r).toFixed(1), c: +(f.c * r).toFixed(1), f: +(f.f * r).toFixed(1) };
 }
-function exampleState() {
-  var t = todayKey();
-  var mk = function (meal, name, g) { return entryFrom(FOODS.find(function (x) { return x.name === name; }), g, meal); };
-  var w = {}; w[shift(t, -14)] = 63.4; w[shift(t, -7)] = 62.8; w[t] = 62.4;
-  var days = {};
-  days[t] = [mk("pdj", "Flocons d'avoine", 40), mk("pdj", "Lait demi-écrémé", 200), mk("pdj", "Banane", 120),
-    mk("dej", "Blanc de poulet cuit", 120), mk("dej", "Riz blanc cuit", 180), mk("dej", "Brocoli cuit", 150), mk("dej", "Huile d'olive", 10),
-    mk("col", "Skyr nature", 150)];
-  var steps = {}; steps[t] = 6400;
-  var water = {}; water[t] = 1250;
-  return { example: true, profile: { sex: "f", age: 32, height: 165, weight: 62.4, bodyfat: "", activity: "1.55", goal: "-250", stepGoal: 8000, addSteps: false },
-    days: days, myFoods: [], weights: w, steps: steps, water: water };
+/* Premier lancement : tout est à zéro tant que le profil n'est pas enregistré. */
+function freshState() {
+  return { profileSaved: false,
+    profile: { sex: "f", age: "", height: "", weight: "", bodyfat: "", activity: "1.375", goal: "0", stepGoal: 8000, addSteps: false },
+    days: {}, myFoods: [], weights: {}, steps: {}, water: {} };
 }
 function load() {
   try {
@@ -44,11 +37,13 @@ function load() {
       if (s && s.profile && s.days) {
         s.myFoods = s.myFoods || []; s.weights = s.weights || {}; s.steps = s.steps || {}; s.water = s.water || {};
         if (!s.profile.stepGoal) s.profile.stepGoal = 8000;
+        if (s.example) return freshState(); // anciennes données d'exemple : on repart de zéro
+        if (s.profileSaved === undefined) s.profileSaved = calc(s.profile).ok;
         return s;
       }
     }
   } catch (e) {}
-  return exampleState();
+  return freshState();
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 var state = load();
@@ -105,7 +100,9 @@ function statusBox(el, kind, text) {
   el.innerHTML = (kind === "busy" ? '<span class="spin" aria-hidden="true"></span>' : "") + "<span></span>";
   el.lastChild.textContent = text || "";
 }
-function leaveExample() { if (state.example) { state.days = {}; state.weights = {}; state.steps = {}; state.water = {}; state.example = false; } }
+function leaveExample() {}
+/* Calculs seulement une fois le profil enregistré */
+function savedCalc() { return state.profileSaved ? calc(state.profile) : { ok: false, errs: [] }; }
 
 /* ---------- Journal ---------- */
 function dateLabel(k) {
@@ -118,8 +115,8 @@ function dateLabel(k) {
 function renderJournal() {
   $("dateLabel").textContent = dateLabel(day);
   $("nextDay").disabled = day >= todayKey();
-  $("exampleBanner").hidden = !state.example;
-  var r = calc(state.profile), list = entries();
+  $("setupBanner").hidden = !!state.profileSaved;
+  var r = savedCalc(), list = entries();
   var tot = list.reduce(function (a, e) { return { k: a.k + e.kcal, p: a.p + e.p, c: a.c + e.c, f: a.f + e.f }; }, { k: 0, p: 0, c: 0, f: 0 });
   var target = dayTarget(r);
   $("eaten").textContent = fmt(tot.k);
@@ -181,10 +178,7 @@ function renderJournal() {
 }
 $("prevDay").onclick = function () { day = shift(day, -1); renderJournal(); };
 $("nextDay").onclick = function () { if (day < todayKey()) { day = shift(day, 1); renderJournal(); } };
-$("clearExample").onclick = function () {
-  state.days = {}; state.weights = {}; state.steps = {}; state.water = {}; state.example = false; save(); renderJournal();
-  location.hash = "#profil"; toast("Exemple effacé. Renseigne ton profil.");
-};
+$("goProfile").onclick = function () { location.hash = "#profil"; };
 $("meals").addEventListener("click", function (e) {
   var del = e.target.closest("[data-del]");
   if (del) {
@@ -237,14 +231,14 @@ document.querySelectorAll("[data-water]").forEach(function (b) {
   };
 });
 /* Quitter l'exemple sans perdre ce que la personne vient de noter */
-function leaveExampleKeepToday() { if (state.example) leaveExample(); }
+function leaveExampleKeepToday() {}
 
 /* ---------- Progrès ---------- */
 function weightKeys() { return Object.keys(state.weights).sort(); }
 function renderProgress() {
   if (!$("wDate").value) $("wDate").value = todayKey();
   $("wDate").max = todayKey();
-  var keys = weightKeys(), r = calc(state.profile);
+  var keys = weightKeys(), r = savedCalc();
   // Statistiques
   var last = keys.length ? state.weights[keys[keys.length - 1]] : null;
   var first = keys.length ? state.weights[keys[0]] : null;
@@ -333,7 +327,8 @@ function fillProfileForm() {
 function renderResults() {
   var r = calc(state.profile), err = $("profileError");
   if (!r.ok) {
-    err.hidden = false; err.textContent = "Vérifie " + r.errs.join(", ") + ".";
+    var pr = state.profile, empty = pr.age === "" && pr.height === "" && pr.weight === "";
+    err.hidden = false; err.textContent = empty ? "Remplis ton âge, ta taille et ton poids, puis enregistre ton profil." : "Vérifie " + r.errs.join(", ") + ".";
     $("rTarget").textContent = "–"; $("rRows").innerHTML = ""; $("rNote").hidden = true; $("rFormula").textContent = "";
   } else {
     err.hidden = true;
@@ -364,7 +359,16 @@ document.querySelectorAll("#sexSeg button").forEach(function (b) { b.onclick = f
 });
 $("stepGoal").addEventListener("input", function () { var v = parseInt(this.value, 10); if (v >= 1000) { state.profile.stepGoal = v; save(); } });
 $("addSteps").addEventListener("change", function () { state.profile.addSteps = this.checked; onProfile(); });
-function onProfile() { state.example = false; save(); renderResults(); }
+function onProfile() { save(); renderResults(); }
+$("saveProfile").onclick = function () {
+  var r = calc(state.profile);
+  if (!r.ok) { renderResults(); $("profileError").scrollIntoView({ block: "center" }); toast("Complète ton profil avant d'enregistrer"); return; }
+  var first = !state.profileSaved;
+  state.profileSaved = true;
+  save(); updateSaveBtn(); toast("Profil enregistré");
+  if (first) location.hash = "#journal";
+};
+function updateSaveBtn() { $("saveProfile").textContent = state.profileSaved ? "Enregistrer les modifications" : "Enregistrer mon profil"; }
 $("myFoodsList").addEventListener("click", function (e) {
   var b = e.target.closest("[data-mfdel]");
   if (!b) return;
@@ -394,7 +398,7 @@ function route() {
   $("datenav").style.visibility = v === "journal" ? "visible" : "hidden";
   if (v === "journal") renderJournal();
   else if (v === "progres") renderProgress();
-  else { fillProfileForm(); renderResults(); }
+  else { fillProfileForm(); renderResults(); updateSaveBtn(); }
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);
@@ -632,7 +636,7 @@ function resetPhoto() {
   statusBox($("phStatus"), "", "");
   AI.available().then(function (ok) {
     $("photoCapture").hidden = !ok;
-    if (!ok) statusBox($("phStatus"), "err", "L'analyse photo n'est pas disponible ici. Utilise la recherche, le code-barres ou la saisie libre.");
+    if (!ok) statusBox($("phStatus"), "err", AI.errorText({ code: "unavailable" }));
   });
 }
 function setPhoto(file) {
