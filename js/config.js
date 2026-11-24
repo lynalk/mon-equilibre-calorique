@@ -3,5 +3,5 @@
    Laisse vide tant que le relais n'est pas en ligne. Exemple :
    RELAY_URL: "https://mon-equilibre-ia.ton-compte.workers.dev" */
 window.APP_CONFIG = {
-  RELAY_URL: ""
+  RELAY_URL: "https://mon-equilibre-calorique.myotecmontigny.workers.dev"
 };
