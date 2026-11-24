@@ -23,9 +23,9 @@ Compteur de calories précis et personnalisé, en français, pensé pour le tél
 | Journal, profil, progrès | oui | oui |
 | Lecture du code-barres | oui | oui |
 | Base Open Food Facts (code-barres et recherche par nom) | non, le réseau de la page est bloqué : l'étiquette prend le relais | oui |
-| Analyse photo par IA | oui, sur le compte Claude de la personne, sans clé d'API | non |
+| Analyse photo par IA | oui, sur le compte Claude de la personne, sans clé d'API | oui, une fois le relais IA en ligne (voir [RELAIS-IA.md](RELAIS-IA.md)) |
 
-L'analyse IA passe par la capacité `sample` des pages Claude (`js/ai.js`). La page doit être publiée avec `capabilities: {sample: {images: true}}`.
+Dans Claude, l'analyse IA passe par la capacité `sample` (`js/ai.js`), la page étant publiée avec `capabilities: {sample: {images: true}}`. Ailleurs, elle passe par le relais `relay/` (Cloudflare Worker) dont l'adresse se règle dans `js/config.js`. La clé Anthropic reste un secret Cloudflare et n'est jamais dans le dépôt.
 
 Pour publier en site web et l'installer sur le téléphone, voir [PUBLIER.md](PUBLIER.md).
 
@@ -37,7 +37,9 @@ Pour publier en site web et l'installer sur le téléphone, voir [PUBLIER.md](PU
 - `img/` : logo Le Reformer by LK et icônes
 - `manifest.webmanifest` : installation sur l'écran d'accueil
 - `js/barcode.js` : décodage (BarcodeDetector, sinon ZXing chargé depuis unpkg) et recherche Open Food Facts
-- `js/ai.js` : analyse photo du plat et lecture d'étiquette
+- `js/config.js` : adresse du relais IA
+- `js/ai.js` : analyse photo du plat et lecture d'étiquette (Claude ou relais)
+- `relay/` : relais IA (Cloudflare Worker) qui garde la clé Anthropic secrète
 - `js/app.js` : état, calculs et rendu
 
 Les données sont en `localStorage` (clé `mon-equilibre.v1`).

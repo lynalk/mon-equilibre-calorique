@@ -1,0 +1,15 @@
+{
+  "name": "mon-equilibre-relais-ia",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.13.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.167.0"
+  }
+}

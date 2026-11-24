@@ -631,7 +631,7 @@ function resetPhoto() {
   statusBox($("phStatus"), "", "");
   AI.available().then(function (ok) {
     $("photoCapture").hidden = !ok;
-    if (!ok) statusBox($("phStatus"), "err", "L'analyse photo fonctionne quand l'appli est ouverte dans Claude. Utilise la recherche ou la saisie libre en attendant.");
+    if (!ok) statusBox($("phStatus"), "err", AI.errorText({ code: "unavailable" }));
   });
 }
 function setPhoto(file) {
