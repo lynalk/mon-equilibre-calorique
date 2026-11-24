@@ -32,9 +32,9 @@
 <main class="wrap">
   <!-- JOURNAL -->
   <section id="view-journal" class="stack">
-    <div class="banner" id="exampleBanner" hidden>
-      <span><b>Données d'exemple.</b> Le profil et les repas affichés sont fictifs.</span>
-      <button class="btn ghost" id="clearExample" style="min-height:36px;padding:7px 12px">Commencer avec mes données</button>
+    <div class="banner" id="setupBanner" hidden>
+      <span><b>Bienvenue !</b> Renseigne et enregistre ton profil pour calculer ton objectif du jour.</span>
+      <button class="btn" id="goProfile" style="min-height:36px;padding:7px 14px">Remplir mon profil</button>
     </div>
 
     <div class="card">
@@ -91,7 +91,7 @@
       </div>
       <div class="inline">
         <div class="field"><label for="wDate">Date</label><input id="wDate" type="date"></div>
-        <div class="field"><label for="wKg">Poids (kg)</label><input id="wKg" type="number" inputmode="decimal" step="0.1" min="30" max="300"></div>
+        <div class="field"><label for="wKg">Poids (kg)</label><input id="wKg" type="number" inputmode="decimal" step="0.1" min="30" max="300" placeholder="ex. 62,4"></div>
         <button class="btn" id="wAdd">Noter</button>
       </div>
       <div class="stats" id="wStats"></div>
@@ -153,6 +153,7 @@
       <label class="check"><input type="checkbox" id="addSteps"> Ajouter les calories de mes pas à mon objectif du jour</label>
       <p class="hint" style="margin:-6px 0 0">Coche-le seulement avec le niveau « Sédentaire », sinon la marche est comptée deux fois.</p>
       <p class="hint" id="profileError" hidden></p>
+      <button class="btn" id="saveProfile" type="button">Enregistrer mon profil</button>
     </div>
 
     <div class="card stack" id="resultsCard">

@@ -4,6 +4,8 @@ Compteur de calories précis et personnalisé, en français, pensé pour le tél
 
 ## Fonctions
 
+- **Premier lancement** : tout est à zéro (journal, pas, eau, progrès) tant que le profil n'est pas rempli et enregistré avec le bouton « Enregistrer mon profil ».
+
 - **Profil et besoins** : métabolisme de base par Mifflin-St Jeor, ou Katch-McArdle si la masse grasse est connue, multiplié par le coefficient d'activité puis ajusté selon l'objectif (de −500 à +500 kcal). Plancher de 1 200 kcal (femme) / 1 500 kcal (homme). Macros : protéines 1,6 à 1,8 g/kg, lipides 30 % des calories, glucides pour le reste.
 - **Journal** : 4 repas, total du jour comparé à l'objectif, navigation entre les jours, reprise d'un repas de la veille en un geste.
 - **Ajout d'aliments**, quatre façons :
