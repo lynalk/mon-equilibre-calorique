@@ -87,3 +87,7 @@ Pour changer de modèle : Cloudflare → ton Worker → Paramètres → Variable
 - Le relais ne fait **que** deux choses : analyser un plat et lire une étiquette. Personne ne peut s'en servir pour discuter librement avec Claude à tes frais.
 
 Si un jour tu veux tout couper : supprime le secret `ANTHROPIC_API_KEY` dans Cloudflare, ou désactive la clé sur console.anthropic.com.
+
+## Si tu as importé tout le dépôt dans Cloudflare
+
+Si ton Worker a été créé avec **Importer un dépôt** et le répertoire racine `/` (au lieu de `relay`), c'est prévu : le fichier `wrangler.toml` à la racine du dépôt déploie le relais sous le nom `mon-equilibre-calorique`. Chaque modification fusionnée sur `main` le redéploie tout seul.
