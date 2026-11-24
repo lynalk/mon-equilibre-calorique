@@ -1,7 +1,7 @@
 /* Lecture de code-barres depuis une photo, puis recherche du produit dans Open Food Facts. */
 window.Barcode = (function () {
   "use strict";
-  var ZXING_URL = "https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js";
+  var ZXING_URL = "js/vendor/zxing.min.js"; /* copie locale de @zxing/library 0.21.3 : marche hors ligne */
   var zxingPromise = null;
 
   function loadZXing() {

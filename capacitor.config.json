@@ -1,0 +1,13 @@
+{
+  "appId": "fr.lereformerbylk.monequilibre",
+  "appName": "Mon équilibre",
+  "webDir": "www",
+  "backgroundColor": "#F7F1EA",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F7F1EA"
+  },
+  "android": {
+    "backgroundColor": "#F7F1EA"
+  }
+}

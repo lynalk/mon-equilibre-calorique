@@ -177,6 +177,7 @@ function renderJournal() {
       (items.length ? '<ul class="items">' + lis + "</ul>" : '<div class="empty">Rien de noté pour l\'instant.</div>') +
       '<button class="add-btn" data-add="' + m.id + '">+ Ajouter</button>' + copy + "</div>";
   }).join("");
+  if (window.App && typeof window.App.afterJournal === "function") window.App.afterJournal();
 }
 $("prevDay").onclick = function () { day = shift(day, -1); renderJournal(); };
 $("nextDay").onclick = function () { if (day < todayKey()) { day = shift(day, 1); renderJournal(); } };
@@ -631,7 +632,7 @@ function resetPhoto() {
   statusBox($("phStatus"), "", "");
   AI.available().then(function (ok) {
     $("photoCapture").hidden = !ok;
-    if (!ok) statusBox($("phStatus"), "err", "L'analyse photo fonctionne quand l'appli est ouverte dans Claude. Utilise la recherche ou la saisie libre en attendant.");
+    if (!ok) statusBox($("phStatus"), "err", "L'analyse photo n'est pas disponible ici. Utilise la recherche, le code-barres ou la saisie libre.");
   });
 }
 function setPhoto(file) {
@@ -752,6 +753,14 @@ dlg.addEventListener("click", function (e) { if (e.target === dlg) closeSheet();
 dlg.addEventListener("close", function () { if (aiCtl) { aiCtl.abort(); aiCtl = null; } });
 
 document.addEventListener("visibilitychange", function () { if (!document.hidden && !$("view-journal").hidden) renderJournal(); });
+
+/* Accès pour js/native.js (appli installée sur iPhone ou Android) */
+window.App = {
+  getState: function () { return state; },
+  save: save, keyOf: keyOf, toast: toast, stepsOf: stepsOf, leaveExampleKeepToday: leaveExampleKeepToday,
+  refresh: function () { if (!$("view-journal").hidden) renderJournal(); },
+  afterJournal: null
+};
 
 route();
 })();

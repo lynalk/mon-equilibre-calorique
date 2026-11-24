@@ -1,0 +1,24 @@
+{
+  "name": "mon-equilibre-calorique",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Compteur de calories précis et personnalisé (Le Reformer by LK)",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "ios": "node scripts/build.mjs && npx cap sync ios",
+    "android": "node scripts/build.mjs && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/ios": "8.6.2",
+    "@capgo/capacitor-health": "^8.13.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "4.0.0",
+    "@capacitor/cli": "8.6.2",
+    "@fontsource/cormorant-garamond": "^5.2.0",
+    "@fontsource/jost": "^5.2.0",
+    "@zxing/library": "0.21.3"
+  }
+}

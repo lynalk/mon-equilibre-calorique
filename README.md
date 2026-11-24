@@ -29,6 +29,24 @@ L'analyse IA passe par la capacité `sample` des pages Claude (`js/ai.js`). La p
 
 Pour publier en site web et l'installer sur le téléphone, voir [PUBLIER.md](PUBLIER.md).
 
+## Appli iPhone et Android (App Store, Play Store)
+
+Le même code est emballé avec [Capacitor](https://capacitorjs.com) : projet Xcode dans `ios/`, projet Android Studio dans `android/`. Dans l'appli installée :
+
+- tout marche hors ligne, sauf Open Food Facts (polices, lecteur de code-barres et base d'aliments sont dans l'appli) ;
+- les pas peuvent être lus dans **Apple Santé** (iPhone, Apple Watch) ou **Health Connect** (Android), via `@capgo/capacitor-health` (`js/native.js`), en lecture seule ;
+- l'onglet Photo IA est masqué : l'IA des pages Claude n'existe pas dans une appli. Il faudra un petit serveur avec une clé d'API pour l'y remettre.
+
+Sur le Mac, après chaque changement du code web :
+
+```bash
+npm install      # la première fois, et après une mise à jour du dépôt
+npm run ios      # copie le code web dans le projet iOS (npm run android pour Android)
+open ios/App/App.xcodeproj
+```
+
+Icône et écran de démarrage : sources dans `assets/`, régénérés avec `npx capacitor-assets generate`. Identifiant de l'appli : `fr.lereformerbylk.monequilibre`. Page de confidentialité : `confidentialite.html` (aussi en ligne sur GitHub Pages, adresse demandée par Apple et Google).
+
 ## Structure
 
 - `index.html` : écrans et formulaires
@@ -36,9 +54,14 @@ Pour publier en site web et l'installer sur le téléphone, voir [PUBLIER.md](PU
 - `js/foods.js` : base d'aliments intégrée (333 aliments)
 - `img/` : logo Le Reformer by LK et icônes
 - `manifest.webmanifest` : installation sur l'écran d'accueil
-- `js/barcode.js` : décodage (BarcodeDetector, sinon ZXing chargé depuis unpkg) et recherche Open Food Facts
+- `js/barcode.js` : décodage (BarcodeDetector, sinon ZXing) et recherche Open Food Facts
 - `js/ai.js` : analyse photo du plat et lecture d'étiquette
 - `js/app.js` : état, calculs et rendu
+- `js/native.js` : réglages de l'appli installée (pas depuis la santé du téléphone)
+- `js/vendor/` : ZXing et Capacitor, copiés pour marcher hors ligne
+- `fonts/`, `css/fonts.css` : polices Jost et Cormorant Garamond hébergées avec l'appli
+- `confidentialite.html` : politique de confidentialité
+- `ios/`, `android/`, `capacitor.config.json`, `scripts/build.mjs` : emballage natif
 
 Les données sont en `localStorage` (clé `mon-equilibre.v1`).
 
