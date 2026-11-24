@@ -1,0 +1,21 @@
+# Relais IA de « Mon équilibre calorique » (Cloudflare Worker)
+# La clé Anthropic n'est PAS ici : elle se met dans Cloudflare, en secret, sous le nom ANTHROPIC_API_KEY.
+name = "mon-equilibre-ia"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Sites autorisés à utiliser le relais (séparés par des virgules).
+# Le site GitHub Pages + l'appli iPhone/Android (Capacitor).
+ALLOWED_ORIGINS = "https://lynalk.github.io,capacitor://localhost,https://localhost,http://localhost"
+# Modèle Claude utilisé pour les photos
+MODEL = "claude-opus-5-5"
+
+# Anti-abus : 6 analyses par minute et par adresse IP au maximum.
+[[ratelimits]]
+name = "PHOTO_LIMIT"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 6
+  period = 60
