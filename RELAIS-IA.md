@@ -8,7 +8,19 @@ Téléphone ── photo ──▶ Relais Cloudflare (clé secrète) ──▶ C
 
 La clé n'est **jamais** dans le code de l'appli ni sur GitHub. Elle reste rangée dans Cloudflare.
 
-Compte environ 20 minutes, une seule fois.
+Compte environ 10 minutes, une seule fois.
+
+## Version rapide (3 clics)
+
+1. **Crée ta clé** : ouvre [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys), clique sur **Create Key**, nomme-la `mon-equilibre`, copie-la. Si on te demande un moyen de paiement, ajoute-le avec 5 € de crédit, et fixe une limite mensuelle sur [console.anthropic.com/settings/limits](https://console.anthropic.com/settings/limits) (par exemple 10 €).
+2. **Mets le relais en ligne** : clique sur ce bouton, connecte-toi à Cloudflare (compte gratuit) et à GitHub si on te le demande, colle ta clé dans la case `ANTHROPIC_API_KEY`, puis clique sur **Déployer**.
+
+   [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/lynalk/mon-equilibre-calorique/tree/main/relay)
+
+   Cloudflare crée au passage une copie du dossier du relais dans ton GitHub : c'est normal.
+3. **Envoie l'adresse** affichée à la fin (`https://mon-equilibre-ia....workers.dev`) à Claude, ou colle-la toi-même dans `js/config.js` (étape 4 plus bas).
+
+Le détail de chaque étape suit, si besoin.
 
 ---
 

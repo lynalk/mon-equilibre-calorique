@@ -1,0 +1,2 @@
+# Colle ici ta clé Anthropic (elle commence par sk-ant-). Elle restera un secret Cloudflare.
+ANTHROPIC_API_KEY=
