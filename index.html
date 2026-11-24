@@ -11,9 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="img/icon-192.png">
 <link rel="apple-touch-icon" href="img/icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -66,6 +64,7 @@
           <button class="mini" data-steps="1000" aria-label="Ajouter 1 000 pas">+1 000</button>
           <button class="mini" id="stepsEdit">Saisir</button>
         </div>
+        <button class="mini health-link" id="stepsHealth" type="button" hidden></button>
       </div>
       <div class="card tracker">
         <div class="tracker-head"><span class="eyebrow">Eau</span><span class="small muted num" id="waterGoalLbl"></span></div>
@@ -177,9 +176,10 @@
     <div class="card stack">
       <div>
         <h2 style="font-size:1.05rem">Mes données</h2>
-        <p class="muted small" style="margin:4px 0 0">Tout est enregistré uniquement dans ce navigateur, sur cet appareil.</p>
+        <p class="muted small" style="margin:4px 0 0">Tout est enregistré uniquement sur cet appareil.</p>
       </div>
       <div id="wipeArea"><button class="btn ghost" id="wipeBtn">Effacer toutes mes données</button></div>
+      <p class="small" style="margin:6px 0 0"><a href="confidentialite.html">Confidentialité et mentions</a> · Les estimations sont indicatives et ne remplacent pas l'avis d'un professionnel de santé.</p>
     </div>
   </section>
 </main>
@@ -314,6 +314,8 @@
 <script src="js/config.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/barcode.js"></script>
+<script src="js/vendor/capacitor.js"></script>
 <script src="js/app.js"></script>
+<script src="js/native.js"></script>
 </body>
 </html>
