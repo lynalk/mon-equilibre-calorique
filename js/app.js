@@ -31,15 +31,21 @@ function exampleState() {
   days[t] = [mk("pdj", "Flocons d'avoine", 40), mk("pdj", "Lait demi-écrémé", 200), mk("pdj", "Banane", 120),
     mk("dej", "Blanc de poulet cuit", 120), mk("dej", "Riz blanc cuit", 180), mk("dej", "Brocoli cuit", 150), mk("dej", "Huile d'olive", 10),
     mk("col", "Skyr nature", 150)];
-  return { example: true, profile: { sex: "f", age: 32, height: 165, weight: 62.4, bodyfat: "", activity: "1.55", goal: "-250" },
-    days: days, myFoods: [], weights: w };
+  var steps = {}; steps[t] = 6400;
+  var water = {}; water[t] = 1250;
+  return { example: true, profile: { sex: "f", age: 32, height: 165, weight: 62.4, bodyfat: "", activity: "1.55", goal: "-250", stepGoal: 8000, addSteps: false },
+    days: days, myFoods: [], weights: w, steps: steps, water: water };
 }
 function load() {
   try {
     var raw = localStorage.getItem(KEY);
     if (raw) {
       var s = JSON.parse(raw);
-      if (s && s.profile && s.days) { s.myFoods = s.myFoods || []; s.weights = s.weights || {}; return s; }
+      if (s && s.profile && s.days) {
+        s.myFoods = s.myFoods || []; s.weights = s.weights || {}; s.steps = s.steps || {}; s.water = s.water || {};
+        if (!s.profile.stepGoal) s.profile.stepGoal = 8000;
+        return s;
+      }
     }
   } catch (e) {}
   return exampleState();
@@ -71,9 +77,18 @@ function calc(p) {
   var prot = Math.round(lbm ? Math.max(lbm * 2.2, w * 1.4) : w * (adj < 0 ? 1.8 : 1.6));
   var fat = Math.round(target * 0.30 / 9);
   var carb = Math.max(0, Math.round((target - prot * 4 - fat * 9) / 4));
-  return { ok: true, msj: msj, km: km, lbm: lbm, tdee: tdee, target: target, floored: floored, floor: floor, adj: adj,
-    prot: prot, fat: fat, carb: carb, usedKM: km !== null };
+  return { ok: true, msj: msj, km: km, lbm: lbm, bmr: bmr, tdee: tdee, target: target, floored: floored, floor: floor, adj: adj,
+    prot: prot, fat: fat, carb: carb, usedKM: km !== null, waterGoal: Math.round(w * 35 / 50) * 50 };
 }
+/* Dépense nette de la marche : longueur de pas ≈ 41,5 % de la taille, environ 0,5 kcal par kg et par km. */
+function stepsKcal(steps) {
+  var h = +state.profile.height || 165, w = +state.profile.weight || 65;
+  return steps * (h * 0.415 / 100000) * w * 0.5;
+}
+function stepsOf(k) { return state.steps[k || day] || 0; }
+function waterOf(k) { return state.water[k || day] || 0; }
+/* Objectif du jour : objectif du profil, plus les pas si l'option est cochée. */
+function dayTarget(r, k) { return r.ok ? r.target + (state.profile.addSteps ? Math.round(stepsKcal(stepsOf(k)) / 10) * 10 : 0) : 0; }
 
 /* ---------- Utilitaires ---------- */
 var $ = function (id) { return document.getElementById(id); };
@@ -90,7 +105,7 @@ function statusBox(el, kind, text) {
   el.innerHTML = (kind === "busy" ? '<span class="spin" aria-hidden="true"></span>' : "") + "<span></span>";
   el.lastChild.textContent = text || "";
 }
-function leaveExample() { if (state.example) { state.days = {}; state.weights = {}; state.example = false; } }
+function leaveExample() { if (state.example) { state.days = {}; state.weights = {}; state.steps = {}; state.water = {}; state.example = false; } }
 
 /* ---------- Journal ---------- */
 function dateLabel(k) {
@@ -106,7 +121,7 @@ function renderJournal() {
   $("exampleBanner").hidden = !state.example;
   var r = calc(state.profile), list = entries();
   var tot = list.reduce(function (a, e) { return { k: a.k + e.kcal, p: a.p + e.p, c: a.c + e.c, f: a.f + e.f }; }, { k: 0, p: 0, c: 0, f: 0 });
-  var target = r.ok ? r.target : 0;
+  var target = dayTarget(r);
   $("eaten").textContent = fmt(tot.k);
   $("ofTarget").textContent = target ? "/ " + fmt(target) + " kcal" : "kcal";
   var C = 326.7, pct = target ? Math.min(tot.k / target, 1) : 0;
@@ -122,6 +137,30 @@ function renderJournal() {
     var w = m[2] ? Math.min(100, m[1] / m[2] * 100) : 0;
     return '<div class="macro"><span>' + m[0] + '</span><div class="bar"><span style="width:' + w + '%;background:var(' + m[3] + ')"></span></div><span class="num muted">' + fmt(m[1]) + (m[2] ? " / " + fmt(m[2]) : "") + ' g</span></div>';
   }).join("");
+  // Bilan : métabolisme de base, dépense estimée, écart du jour
+  var bal = $("balance");
+  if (r.ok) {
+    var spend = r.tdee + (state.profile.addSteps ? stepsKcal(stepsOf()) : 0);
+    var diff = Math.round(tot.k - spend);
+    bal.hidden = false;
+    bal.innerHTML = '<div><span>Métabolisme de base</span><b class="num">' + fmt(r.bmr) + '</b></div>' +
+      '<div><span>Dépense estimée</span><b class="num">' + fmt(spend) + '</b></div>' +
+      '<div><span>' + (diff <= 0 ? "Déficit du jour" : "Surplus du jour") + '</span><b class="num ' + (diff <= 0 ? "neg" : "pos") + '">' + (diff > 0 ? "+" : "−") + fmt(Math.abs(diff)) + '</b></div>';
+  } else bal.hidden = true;
+  // Pas
+  var st = stepsOf(), goal = +state.profile.stepGoal || 8000;
+  $("stepsVal").textContent = fmt(st);
+  $("stepsGoalLbl").textContent = "/ " + fmt(goal);
+  $("stepsBar").style.width = Math.min(100, st / goal * 100) + "%";
+  $("stepsKcal").textContent = st ? "≈ " + fmt(stepsKcal(st)) + " kcal dépensées" : "Note tes pas du jour";
+  // Eau
+  var wa = waterOf(), wg = r.ok ? r.waterGoal : 2000;
+  $("waterVal").textContent = (wa / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " L";
+  $("waterGoalLbl").textContent = "/ " + (wg / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " L";
+  var nG = Math.max(1, Math.round(wg / 250)), full = Math.round(wa / 250), gl = "";
+  for (var gi = 0; gi < Math.max(nG, full); gi++) gl += '<i class="' + (gi < full ? "full" : "") + '"></i>';
+  $("glasses").innerHTML = gl;
+
   var prev = entries(shift(day, -1));
   $("meals").innerHTML = MEALS.map(function (m) {
     var items = list.filter(function (e) { return e.meal === m.id; });
@@ -142,7 +181,7 @@ function renderJournal() {
 $("prevDay").onclick = function () { day = shift(day, -1); renderJournal(); };
 $("nextDay").onclick = function () { if (day < todayKey()) { day = shift(day, 1); renderJournal(); } };
 $("clearExample").onclick = function () {
-  state.days = {}; state.weights = {}; state.example = false; save(); renderJournal();
+  state.days = {}; state.weights = {}; state.steps = {}; state.water = {}; state.example = false; save(); renderJournal();
   location.hash = "#profil"; toast("Exemple effacé. Renseigne ton profil.");
 };
 $("meals").addEventListener("click", function (e) {
@@ -164,6 +203,40 @@ $("meals").addEventListener("click", function (e) {
   var add = e.target.closest("[data-add]");
   if (add) openSheet(add.dataset.add);
 });
+
+/* Pas et eau */
+function bindStepBtns() {
+  document.querySelectorAll("[data-steps]").forEach(function (b) {
+    b.onclick = function () {
+      leaveExampleKeepToday();
+      state.steps[day] = Math.max(0, stepsOf() + Number(b.dataset.steps)); save(); renderJournal();
+    };
+  });
+  $("stepsEdit").onclick = stepsEditHandler;
+}
+var stepBtnsHtml = document.querySelector("[data-steps]").parentNode.innerHTML;
+function stepsEditHandler() {
+  var box = this.closest(".tracker-btns");
+  box.innerHTML = '<input id="stepsInput" type="number" inputmode="numeric" min="0" max="100000" value="' + stepsOf() +
+    '" style="width:96px;border:1px solid var(--line);border-radius:10px;padding:5px 8px;background:var(--surface)" aria-label="Nombre de pas"><button class="mini" id="stepsOk">OK</button>';
+  var inp = $("stepsInput"); inp.focus(); inp.select();
+  var done = function () {
+    var v = Math.max(0, Math.min(100000, parseInt(inp.value, 10) || 0));
+    leaveExampleKeepToday(); state.steps[day] = v; save();
+    box.innerHTML = stepBtnsHtml; bindStepBtns(); renderJournal(); toast("Pas enregistrés");
+  };
+  $("stepsOk").onclick = done;
+  inp.onkeydown = function (e) { if (e.key === "Enter") done(); };
+}
+bindStepBtns();
+document.querySelectorAll("[data-water]").forEach(function (b) {
+  b.onclick = function () {
+    leaveExampleKeepToday();
+    state.water[day] = Math.max(0, waterOf() + Number(b.dataset.water)); save(); renderJournal();
+  };
+});
+/* Quitter l'exemple sans perdre ce que la personne vient de noter */
+function leaveExampleKeepToday() { if (state.example) leaveExample(); }
 
 /* ---------- Progrès ---------- */
 function weightKeys() { return Object.keys(state.weights).sort(); }
@@ -254,6 +327,7 @@ function fillProfileForm() {
   document.querySelectorAll("#sexSeg button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.v === p.sex)); });
   $("age").value = p.age; $("height").value = p.height; $("weight").value = p.weight; $("bodyfat").value = p.bodyfat;
   $("activity").value = p.activity; $("goal").value = p.goal;
+  $("stepGoal").value = p.stepGoal || 8000; $("addSteps").checked = !!p.addSteps;
 }
 function renderResults() {
   var r = calc(state.profile), err = $("profileError");
@@ -266,7 +340,9 @@ function renderResults() {
     var rows = [["Métabolisme de base (Mifflin-St Jeor)", fmt(r.msj) + " kcal"]];
     if (r.usedKM) { rows.push(["Masse maigre", fmt1(r.lbm) + " kg"]); rows.push(["Métabolisme de base (Katch-McArdle)", fmt(r.km) + " kcal"]); }
     rows.push(["Dépense totale estimée", fmt(r.tdee) + " kcal"]);
-    rows.push(["Ajustement objectif", (r.adj > 0 ? "+" : "") + fmt(r.adj) + " kcal"]);
+    rows.push([r.adj < 0 ? "Déficit calorique visé" : r.adj > 0 ? "Surplus calorique visé" : "Équilibre visé",
+      r.adj ? (r.adj > 0 ? "+" : "−") + fmt(Math.abs(r.adj)) + " kcal/j · ≈ " + fmt1(Math.abs(r.adj) * 7 / 7700) + " kg/sem." : "0 kcal"]);
+    rows.push(["Eau conseillée (35 ml/kg)", fmt1(r.waterGoal / 1000) + " L"]);
     rows.push(["Protéines", fmt(r.prot) + " g"], ["Glucides", fmt(r.carb) + " g"], ["Lipides (30 % des calories)", fmt(r.fat) + " g"]);
     $("rRows").innerHTML = rows.map(function (x) { return '<div class="row"><span>' + x[0] + '</span><b class="num">' + x[1] + "</b></div>"; }).join("");
     var note = $("rNote");
@@ -285,6 +361,8 @@ document.querySelectorAll("#sexSeg button").forEach(function (b) { b.onclick = f
 ["age", "height", "weight", "bodyfat", "activity", "goal"].forEach(function (id) {
   $(id).addEventListener("input", function () { state.profile[id] = $(id).value; onProfile(); });
 });
+$("stepGoal").addEventListener("input", function () { var v = parseInt(this.value, 10); if (v >= 1000) { state.profile.stepGoal = v; save(); } });
+$("addSteps").addEventListener("change", function () { state.profile.addSteps = this.checked; onProfile(); });
 function onProfile() { state.example = false; save(); renderResults(); }
 $("myFoodsList").addEventListener("click", function (e) {
   var b = e.target.closest("[data-mfdel]");
@@ -295,7 +373,7 @@ function wipeHandler() {
   $("wipeArea").innerHTML = '<p class="small" style="margin:0 0 10px">Le profil, l\'historique des repas, les pesées et tes aliments enregistrés seront supprimés de cet appareil.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn danger" id="wipeYes">Oui, tout effacer</button><button class="btn ghost" id="wipeNo">Annuler</button></div>';
   $("wipeYes").onclick = function () {
     try { localStorage.removeItem(KEY); } catch (e) {}
-    state = { example: false, profile: { sex: "f", age: "", height: "", weight: "", bodyfat: "", activity: "1.375", goal: "0" }, days: {}, myFoods: [], weights: {} };
+    state = { example: false, profile: { sex: "f", age: "", height: "", weight: "", bodyfat: "", activity: "1.375", goal: "0", stepGoal: 8000, addSteps: false }, days: {}, myFoods: [], weights: {}, steps: {}, water: {} };
     save(); resetWipe(); fillProfileForm(); renderResults(); toast("Données effacées");
   };
   $("wipeNo").onclick = resetWipe;
@@ -365,32 +443,82 @@ function renderFoods() {
   }
   $("foodList").innerHTML = html;
 }
-$("foodSearch").addEventListener("input", renderFoods);
+var offTimer = null, offCtl = null, offBlocked = false, offResults = [];
+function offSearch() {
+  var q = $("foodSearch").value.trim();
+  clearTimeout(offTimer);
+  if (offCtl) { offCtl.abort(); offCtl = null; }
+  if (q.length < 3) { $("offBlock").hidden = true; return; }
+  $("offBlock").hidden = false; $("offList").hidden = true;
+  if (offBlocked) { statusBox($("offStatus"), "", "La recherche des produits du commerce marche dans la version web de l'appli. Ici, scanne le code-barres."); return; }
+  statusBox($("offStatus"), "busy", "Recherche dans les produits du commerce…");
+  offTimer = setTimeout(async function () {
+    var ctl = offCtl = new AbortController();
+    var res = await Barcode.search(q, ctl.signal);
+    if (ctl !== offCtl) return;
+    offCtl = null;
+    if (res.status === "offline") {
+      offBlocked = true;
+      statusBox($("offStatus"), "", "La recherche des produits du commerce marche dans la version web de l'appli. Ici, scanne le code-barres.");
+      return;
+    }
+    if (res.status !== "ok") return;
+    offResults = res.products.map(function (p, i) { return Object.assign({ id: "o" + i + "-" + (p.barcode || i), group: "Produits du commerce", fromOff: true, portions: p.serving ? [["1 portion", p.serving]] : [] }, p); });
+    if (!offResults.length) { statusBox($("offStatus"), "", "Aucun produit du commerce trouvé pour « " + q + " »."); return; }
+    statusBox($("offStatus"), "", "");
+    $("offList").innerHTML = offResults.map(foodBtn).join("");
+    $("offList").hidden = false;
+  }, 600);
+}
+$("foodSearch").addEventListener("input", function () { renderFoods(); offSearch(); });
+$("offList").addEventListener("click", function (e) {
+  var b = e.target.closest("[data-food]"); if (!b) return;
+  var f = offResults.find(function (x) { return x.id === b.dataset.food; });
+  if (f) pick(f);
+});
 $("foodList").addEventListener("click", function (e) { var b = e.target.closest("[data-food]"); if (b) pick(findFood(b.dataset.food)); });
 
-/* Quantité */
+/* Quantité : en grammes ou en portions (1 pomme, 1 tranche…) */
+function unitsOf(f) {
+  var u = [["grammes (ou ml)", 1]];
+  (f.portions || []).forEach(function (p) { u.push([p[0] + " (" + fmt(p[1]) + " g)", p[1]]); });
+  if (f.serving && !(f.portions || []).length) u.push(["portion (" + fmt(f.serving) + " g)", f.serving]);
+  return u;
+}
 function pick(f) {
   picked = f;
   ["search", "barcode"].forEach(function (n) { $("mode-" + n).hidden = true; });
   $("qtyStep").hidden = false;
   $("pickedName").textContent = f.name;
-  var portions = (f.portions || []).slice();
-  if (f.serving && !portions.length) portions.push(["1 portion", f.serving]);
-  $("grams").value = portions.length ? portions[0][1] : 100;
-  var chips = portions.concat([["100 g", 100]]);
-  $("portionChips").innerHTML = chips.map(function (c) { return '<button type="button" class="chip" data-g="' + c[1] + '">' + esc(c[0]) + (c[0] === "100 g" ? "" : " · " + fmt(c[1]) + " g") + "</button>"; }).join("");
+  var units = unitsOf(f);
+  $("unit").innerHTML = units.map(function (u, i) { return '<option value="' + i + '">' + esc(u[0]) + "</option>"; }).join("");
+  if (units.length > 1) { $("unit").value = "1"; $("amount").value = 1; }
+  else { $("unit").value = "0"; $("amount").value = 100; }
   updatePreview();
 }
-$("portionChips").addEventListener("click", function (e) { var c = e.target.closest("[data-g]"); if (c) { $("grams").value = c.dataset.g; updatePreview(); } });
-$("grams").addEventListener("input", updatePreview);
+function currentGrams() {
+  if (!picked) return 0;
+  var u = unitsOf(picked)[+$("unit").value || 0];
+  var a = parseFloat(String($("amount").value).replace(",", ".")) || 0;
+  return a * u[1];
+}
+$("unit").addEventListener("change", function () {
+  // On garde la même quantité en grammes en changeant d'unité
+  var units = unitsOf(picked), idx = +this.value;
+  $("amount").value = idx === 0 ? Math.round(prevGrams || 100) : 1;
+  updatePreview();
+});
+var prevGrams = 0;
+$("amount").addEventListener("input", updatePreview);
 function updatePreview() {
-  var g = +$("grams").value || 0;
-  document.querySelectorAll("#portionChips .chip").forEach(function (c) { c.setAttribute("aria-pressed", String(+c.dataset.g === g)); });
+  var g = currentGrams();
+  prevGrams = g;
   if (!picked) return;
   var r = g / 100;
+  $("gramsHint").textContent = +$("unit").value ? "Soit " + fmt(g) + " g" : "";
   $("pvKcal").textContent = fmt(picked.kcal * r) + " kcal";
   $("pvMacros").textContent = "P " + fmt1(picked.p * r) + " g · G " + fmt1(picked.c * r) + " g · L " + fmt1(picked.f * r) + " g";
-  $("addFood").disabled = !(g > 0 && g <= 3000);
+  $("addFood").disabled = !(g > 0 && g <= 5000);
 }
 $("changeFood").onclick = function () { picked = null; setMode(mode); if (mode === "search") $("foodSearch").focus(); };
 function pushEntries(list) {
@@ -399,7 +527,13 @@ function pushEntries(list) {
   save();
 }
 $("addFood").onclick = function () {
-  var g = +$("grams").value; if (!picked || !(g > 0)) return;
+  var g = Math.round(currentGrams()); if (!picked || !(g > 0)) return;
+  if (picked.fromOff) {
+    // Un produit du commerce choisi est gardé dans « Mes aliments » pour le retrouver ensuite
+    var keep = Object.assign({}, picked); delete keep.fromOff;
+    state.myFoods = state.myFoods.filter(function (x) { return !(keep.barcode && x.barcode === keep.barcode); });
+    state.myFoods.unshift(keep); picked = keep;
+  }
   pushEntries([entryFrom(picked, g, $("mealSel").value)]);
   closeSheet(); renderJournal(); toast(picked.name + " ajouté");
 };
@@ -604,7 +738,7 @@ $("addManual").onclick = function () {
 
 function openSheet(meal) {
   $("mealSel").value = meal; picked = null;
-  $("foodSearch").value = "";
+  $("foodSearch").value = ""; $("offBlock").hidden = true;
   ["mName", "mKcal", "mP", "mC", "mF"].forEach(function (id) { $(id).value = ""; });
   setMode("search"); renderFoods();
   if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");

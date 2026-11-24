@@ -97,5 +97,44 @@ window.Barcode = (function () {
     }
   }
 
-  return { decodeFile: decodeFile, lookup: lookup, isValid: isValid };
+  function mapProduct(p, code) {
+    var n = p && p.nutriments;
+    if (!p || !n || n["energy-kcal_100g"] == null) return null;
+    var name = (p.product_name_fr || p.product_name || "").trim();
+    if (!name) return null;
+    var brand = (p.brands || "").split(",")[0].trim();
+    return {
+      name: brand && name.toLowerCase().indexOf(brand.toLowerCase()) < 0 ? name + " (" + brand + ")" : name,
+      kcal: Number(n["energy-kcal_100g"]) || 0,
+      p: Number(n.proteins_100g) || 0,
+      c: Number(n.carbohydrates_100g) || 0,
+      f: Number(n.fat_100g) || 0,
+      serving: Number(p.serving_quantity) > 0 ? Number(p.serving_quantity) : null,
+      barcode: code || p.code || null
+    };
+  }
+
+  /* Recherche par nom dans les produits du commerce vendus en France.
+     Résultat : {status:"ok", products:[...]} | {status:"offline"} */
+  async function search(query, signal) {
+    var ctl = new AbortController();
+    var t = setTimeout(function () { ctl.abort(); }, 9000);
+    if (signal) signal.addEventListener("abort", function () { ctl.abort(); });
+    try {
+      var url = "https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=20" +
+        "&tagtype_0=countries&tag_contains_0=contains&tag_0=france" +
+        "&fields=code,product_name,product_name_fr,brands,nutriments,serving_quantity&search_terms=" + encodeURIComponent(query);
+      var r = await fetch(url, { signal: ctl.signal });
+      if (!r.ok) return { status: "offline" };
+      var d = await r.json();
+      var products = (d.products || []).map(function (p) { return mapProduct(p); }).filter(Boolean);
+      return { status: "ok", products: products };
+    } catch (e) {
+      return { status: signal && signal.aborted ? "cancelled" : "offline" };
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  return { decodeFile: decodeFile, lookup: lookup, search: search, isValid: isValid };
 })();

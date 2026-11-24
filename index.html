@@ -1,15 +1,26 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
 <title>Mon équilibre calorique</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F7F1EA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mon équilibre">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Manrope:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500;600&display=swap">
 <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
 
 <header class="top">
   <div class="wrap">
-    <div class="brand"><i aria-hidden="true"></i>Mon équilibre</div>
+    <div class="brand"><img src="img/logo-reformer.png" alt="Le Reformer by LK" width="120" height="38"><span>Mon équilibre</span></div>
     <div class="datenav" id="datenav">
       <button id="prevDay" aria-label="Jour précédent"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
       <div class="datelabel" id="dateLabel">Aujourd'hui</div>
@@ -39,6 +50,31 @@
           <div class="eyebrow" id="remainLabel">Reste aujourd'hui</div>
           <div class="remain num" id="remain">0 kcal</div>
           <div class="macros" id="macros"></div>
+        </div>
+      </div>
+      <div class="balance" id="balance"></div>
+    </div>
+
+    <div class="trackers">
+      <div class="card tracker">
+        <div class="tracker-head"><span class="eyebrow">Pas</span><span class="small muted num" id="stepsGoalLbl"></span></div>
+        <div class="tracker-val num" id="stepsVal">0</div>
+        <div class="bar"><span id="stepsBar" style="background:var(--accent)"></span></div>
+        <div class="small muted num" id="stepsKcal"></div>
+        <div class="tracker-btns">
+          <button class="mini" data-steps="-1000" aria-label="Retirer 1 000 pas">−1 000</button>
+          <button class="mini" data-steps="1000" aria-label="Ajouter 1 000 pas">+1 000</button>
+          <button class="mini" id="stepsEdit">Saisir</button>
+        </div>
+      </div>
+      <div class="card tracker">
+        <div class="tracker-head"><span class="eyebrow">Eau</span><span class="small muted num" id="waterGoalLbl"></span></div>
+        <div class="tracker-val num" id="waterVal">0 ml</div>
+        <div class="glasses" id="glasses" aria-hidden="true"></div>
+        <div class="tracker-btns">
+          <button class="mini" data-water="-250" aria-label="Retirer un verre">−1 verre</button>
+          <button class="mini" data-water="250" aria-label="Ajouter un verre de 25 cl">+1 verre</button>
+          <button class="mini" data-water="500" aria-label="Ajouter une bouteille de 50 cl">+50 cl</button>
         </div>
       </div>
     </div>
@@ -113,6 +149,9 @@
           <option value="500">Prendre environ 0,5 kg par semaine</option>
         </select>
       </div>
+      <div class="field"><label for="stepGoal">Objectif de pas par jour</label><input id="stepGoal" type="number" inputmode="numeric" min="1000" max="40000" step="500"></div>
+      <label class="check"><input type="checkbox" id="addSteps"> Ajouter les calories de mes pas à mon objectif du jour</label>
+      <p class="hint" style="margin:-6px 0 0">Coche-le seulement avec le niveau « Sédentaire », sinon la marche est comptée deux fois.</p>
       <p class="hint" id="profileError" hidden></p>
     </div>
 
@@ -172,7 +211,12 @@
       <div id="mode-search" class="stack" style="gap:10px">
         <div class="field"><label for="foodSearch">Rechercher un aliment</label><input id="foodSearch" type="search" placeholder="ex. poulet, banane, riz…" autocomplete="off"></div>
         <ul class="foods" id="foodList"></ul>
-        <p class="hint">Valeurs moyennes pour 100 g, indicatives (ordre de grandeur des tables Ciqual).</p>
+        <div id="offBlock" class="stack" style="gap:8px" hidden>
+          <div class="eyebrow">Produits du commerce</div>
+          <div id="offStatus" hidden></div>
+          <ul class="foods" id="offList" hidden></ul>
+        </div>
+        <p class="hint">Aliments de base : valeurs moyennes pour 100 g (ordre de grandeur Ciqual). Produits du commerce : base Open Food Facts.</p>
       </div>
 
       <!-- Code-barres -->
@@ -251,8 +295,11 @@
           <div class="picked" id="pickedName"></div>
           <button class="btn ghost" id="changeFood" style="min-height:34px;padding:6px 10px">Changer</button>
         </div>
-        <div class="field"><label for="grams">Quantité (g ou ml)</label><input id="grams" type="number" inputmode="decimal" min="1" max="3000"></div>
-        <div class="chips" id="portionChips"></div>
+        <div class="grid2">
+          <div class="field"><label for="amount">Quantité</label><input id="amount" type="number" inputmode="decimal" min="0.25" step="0.25" max="3000"></div>
+          <div class="field"><label for="unit">Unité</label><select id="unit"></select></div>
+        </div>
+        <p class="hint num" id="gramsHint"></p>
         <div class="preview"><span class="k num" id="pvKcal">0 kcal</span><span class="small muted num" id="pvMacros"></span></div>
         <button class="btn" id="addFood">Ajouter au journal</button>
       </div>
@@ -266,3 +313,5 @@
 <script src="js/ai.js"></script>
 <script src="js/barcode.js"></script>
 <script src="js/app.js"></script>
+</body>
+</html>

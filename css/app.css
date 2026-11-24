@@ -1,20 +1,25 @@
 /* Layout : appli mobile à une colonne, en-tête collant avec la date, barre d'onglets fixe en bas. */
+/* Charte Le Reformer by LK : crème, rose poudré, terracotta. Appli mobile à une colonne,
+   en-tête collant avec le logo et la date, barre d'onglets fixe en bas. */
 :root{
-  --bg:#F4F7F6; --surface:#FFFFFF; --sunken:#EAF0EE; --fg:#16211E; --muted:#5B6966; --line:#DCE3E0;
-  --accent:#0E7C66; --accent-fg:#FFFFFF; --accent-soft:#DCF0E9; --warm:#C9541F; --warm-soft:#FBE6DB;
-  --prot:#3A68D1; --gluc:#C8920F; --lip:#B0447A;
-  --font-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
-  --font-text:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --r:14px; --nav-h:64px;
+  --bg:#F7F1EA; --surface:#FFFCF8; --sunken:#F1E6DC; --fg:#3B2A26; --muted:#86706A; --line:#EADBD0;
+  --accent:#B5654A; --accent-fg:#FFFFFF; --accent-soft:#F4E1D8; --warm:#A8433A; --warm-soft:#F6DCD6;
+  --blush:#E8C4C0; --rose:#C98F8A; --water:#7FA3B5;
+  --prot:#B5654A; --gluc:#D2A86B; --lip:#C98F8A;
+  --font-display:"Cormorant Garamond", "Times New Roman", serif;
+  --font-text:"Jost", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r:16px; --nav-h:64px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0E1412; --surface:#17201D; --sunken:#111917; --fg:#E7EEEB; --muted:#93A29E; --line:#28332F;
-  --accent:#3CC5A2; --accent-fg:#06231C; --accent-soft:#163A31; --warm:#F08350; --warm-soft:#3A2218;
-  --prot:#82A6F3; --gluc:#E8BD4C; --lip:#E07BAA; color-scheme:dark}}
+  --bg:#1E1715; --surface:#29201D; --sunken:#221A18; --fg:#F3E8E1; --muted:#B49F97; --line:#3C2F2B;
+  --accent:#D98A6E; --accent-fg:#2A1712; --accent-soft:#45302A; --warm:#EE8F7F; --warm-soft:#4A2A25;
+  --blush:#5A4140; --rose:#D9A7A2; --water:#9DC0D1;
+  --prot:#D98A6E; --gluc:#E3BF85; --lip:#D9A7A2; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1412; --surface:#17201D; --sunken:#111917; --fg:#E7EEEB; --muted:#93A29E; --line:#28332F;
-  --accent:#3CC5A2; --accent-fg:#06231C; --accent-soft:#163A31; --warm:#F08350; --warm-soft:#3A2218;
-  --prot:#82A6F3; --gluc:#E8BD4C; --lip:#E07BAA; color-scheme:dark}
+  --bg:#1E1715; --surface:#29201D; --sunken:#221A18; --fg:#F3E8E1; --muted:#B49F97; --line:#3C2F2B;
+  --accent:#D98A6E; --accent-fg:#2A1712; --accent-soft:#45302A; --warm:#EE8F7F; --warm-soft:#4A2A25;
+  --blush:#5A4140; --rose:#D9A7A2; --water:#9DC0D1;
+  --prot:#D98A6E; --gluc:#E3BF85; --lip:#D9A7A2; color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -23,14 +28,15 @@ button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .num{font-variant-numeric:tabular-nums}
-h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0;letter-spacing:.01em}
 
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
 .wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
-.brand{font-family:var(--font-display);font-weight:700;font-size:1.15rem;display:flex;align-items:center;gap:8px;white-space:nowrap}
-.brand i{width:12px;height:12px;border-radius:50%;background:conic-gradient(var(--accent) 0 70%, var(--line) 70% 100%);display:inline-block}
+.brand{display:flex;flex-direction:column;gap:1px;white-space:nowrap;min-width:0}
+.brand img{height:30px;width:auto;display:block}
+.brand span{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:500;padding-left:2px}
 .datenav{display:flex;align-items:center;gap:4px}
 .datenav button{border:1px solid var(--line);background:var(--surface);width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
 .datenav button:disabled{opacity:.35;cursor:default}
@@ -177,3 +183,32 @@ dialog::backdrop{background:rgb(10 20 17 / .45)}
 .check{display:flex;gap:8px;align-items:center;font-size:.88rem}
 .check input{width:18px;height:18px;accent-color:var(--accent)}
 @media (max-width:380px){.ai-row{grid-template-columns:1fr 64px 64px 30px}.stats{grid-template-columns:1fr 1fr}}
+
+/* ----- v3 : charte, pas, eau, bilan ----- */
+body{font-weight:400}
+.btn{font-weight:500;letter-spacing:.02em}
+.ring .big,.remain,.target-big,.stat b,.preview .k,.picked,.tracker-val{font-family:var(--font-display);font-weight:600}
+.ring .big{font-size:2rem}
+.remain{font-size:1.5rem}
+.target-big{font-size:2.6rem}
+.balance{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.balance div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.balance span{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.balance b{font-family:var(--font-display);font-size:1.15rem;font-weight:600}
+.balance b.neg{color:var(--accent)}
+.balance b.pos{color:var(--warm)}
+.trackers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tracker{display:flex;flex-direction:column;gap:8px;padding:14px;min-width:0}
+.tracker-head{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.tracker-val{font-size:1.6rem;line-height:1}
+.tracker-btns{display:flex;flex-wrap:wrap;gap:5px}
+.mini{border:1px solid var(--line);background:var(--sunken);border-radius:999px;padding:5px 9px;font-size:.75rem;font-weight:500;min-height:30px}
+.mini:hover{border-color:var(--accent)}
+.glasses{display:flex;flex-wrap:wrap;gap:3px;min-height:14px}
+.glasses i{width:10px;height:14px;border-radius:2px 2px 4px 4px;border:1.5px solid var(--water);display:block}
+.glasses i.full{background:var(--water)}
+.eyebrow{font-weight:500;letter-spacing:.14em}
+.add-btn{font-weight:500}
+@media (max-width:360px){.trackers{grid-template-columns:1fr}}
+.macro{grid-template-columns:64px 1fr auto}
+.macro .num{white-space:nowrap}
