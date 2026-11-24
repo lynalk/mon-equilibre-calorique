@@ -79,10 +79,32 @@ export default {
     if (request.method === "OPTIONS") {
       return okOrigin ? new Response(null, { status: 204, headers: corsHeaders(okOrigin) }) : new Response(null, { status: 403 });
     }
-    if (request.method === "GET") return reply(200, { ok: true, service: "mon-equilibre-ia" }, okOrigin);
+    if (request.method === "GET") {
+      // Diagnostic sans frais : vérifie que la clé est présente et acceptée (liste des modèles, gratuit).
+      // Ne renvoie jamais la clé elle-même.
+      const out = { ok: true, service: "mon-equilibre-ia", model: env.MODEL || "claude-opus-5-5" };
+      if (!env.ANTHROPIC_API_KEY) {
+        out.key = "absente";
+      } else {
+        if (env.PHOTO_LIMIT) {
+          const { success } = await env.PHOTO_LIMIT.limit({ key: "get:" + (request.headers.get("CF-Connecting-IP") || "") });
+          if (!success) return reply(429, { error: "rate_limited" }, okOrigin);
+        }
+        try {
+          const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY.trim(), baseURL: env.ANTHROPIC_BASE_URL || undefined, maxRetries: 0 });
+          await client.models.retrieve(out.model);
+          out.key = "acceptée";
+        } catch (e) {
+          out.key = "refusée";
+          out.status = e && e.status;
+          out.detail = e && e.error && e.error.error ? e.error.error.type + " : " + String(e.error.error.message || "").slice(0, 200) : String(e && e.message || "").slice(0, 200);
+        }
+      }
+      return reply(200, out, okOrigin);
+    }
     if (request.method !== "POST") return reply(405, { error: "method" }, okOrigin);
     if (!okOrigin) return reply(403, { error: "forbidden" }, "");
-    if (!env.ANTHROPIC_API_KEY) return reply(503, { error: "not_configured" }, okOrigin);
+    if (!env.ANTHROPIC_API_KEY) return reply(503, { error: "missing_key" }, okOrigin);
 
     if (env.PHOTO_LIMIT) {
       const ip = request.headers.get("CF-Connecting-IP") || "inconnue";
@@ -106,7 +128,7 @@ export default {
     const model = env.MODEL || "claude-opus-5-5";
     const useFallback = FALLBACK_MODELS.includes(model);
 
-    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
+    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY.trim(), baseURL: env.ANTHROPIC_BASE_URL || undefined });
     let response;
     try {
       response = await client.beta.messages.create({
@@ -123,10 +145,15 @@ export default {
         }]
       });
     } catch (e) {
+      const msg = String(e && e.message || "").toLowerCase();
+      if (/credit|billing|balance/.test(msg)) return reply(402, { error: "no_credit" }, okOrigin);
       if (e instanceof Anthropic.RateLimitError) return reply(429, { error: "rate_limited" }, okOrigin);
-      if (e instanceof Anthropic.BadRequestError) return reply(400, { error: "image_rejected" }, okOrigin);
-      if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
-        return reply(503, { error: "not_configured" }, okOrigin);
+      if (e instanceof Anthropic.AuthenticationError) return reply(503, { error: "bad_key" }, okOrigin);
+      if (e instanceof Anthropic.PermissionDeniedError) return reply(503, { error: "key_forbidden" }, okOrigin);
+      if (e instanceof Anthropic.NotFoundError) return reply(503, { error: "model_unavailable" }, okOrigin);
+      if (e instanceof Anthropic.BadRequestError) {
+        console.error("Requête refusée", msg.slice(0, 300));
+        return reply(400, { error: "image_rejected" }, okOrigin);
       }
       console.error("Erreur Claude", e && e.status, e && e.message);
       return reply(502, { error: "upstream" }, okOrigin);

@@ -146,6 +146,16 @@ window.AI = (function () {
       case "not_configured":
       case "forbidden":
         return "Le service d'analyse photo n'est pas encore prêt. Réessaie plus tard, ou utilise la recherche.";
+      case "missing_key":
+        return "Le relais n'a pas de clé Anthropic. Ajoute le secret ANTHROPIC_API_KEY dans Cloudflare.";
+      case "bad_key":
+        return "La clé Anthropic du relais est refusée (clé fausse ou supprimée). Remplace le secret ANTHROPIC_API_KEY dans Cloudflare.";
+      case "key_forbidden":
+        return "La clé Anthropic n'a pas le droit d'utiliser l'IA. Vérifie son espace de travail et ses droits sur console.anthropic.com.";
+      case "no_credit":
+        return "Le compte Anthropic n'a plus de crédit. Ajoute du crédit sur console.anthropic.com.";
+      case "model_unavailable":
+        return "Le modèle d'IA choisi n'est pas disponible sur ce compte Anthropic.";
       case "too_large":
         return "Cette photo est trop lourde. Essaie une autre photo.";
       case "not_granted":
