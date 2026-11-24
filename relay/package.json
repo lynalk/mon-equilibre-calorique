@@ -11,5 +11,18 @@
   },
   "devDependencies": {
     "wrangler": "^4.167.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "ANTHROPIC_API_KEY": {
+        "description": "Ta clé Anthropic (commence par `sk-ant-`). Crée-la sur [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys). Elle reste secrète chez Cloudflare."
+      },
+      "MODEL": {
+        "description": "Modèle Claude pour les photos. Laisse `claude-opus-5-5`."
+      },
+      "ALLOWED_ORIGINS": {
+        "description": "Sites autorisés. Ne change rien."
+      }
+    }
   }
 }
