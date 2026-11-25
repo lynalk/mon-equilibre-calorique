@@ -62,6 +62,31 @@ window.Barcode = (function () {
     return null;
   }
 
+  /* Lecture JSON d'Open Food Facts. Dans l'appli installée (iPhone, Android), la requête part du téléphone
+     lui-même (CapacitorHttp) : la vue web de l'appli bloquerait l'appel direct. Ailleurs, fetch classique.
+     Résultat : {status: code HTTP, data: objet JSON ou null} ; lève une erreur si le réseau échoue. */
+  function nativeHttp() {
+    var C = window.Capacitor, X = window.capacitorExports;
+    return C && typeof C.isNativePlatform === "function" && C.isNativePlatform() && X && X.CapacitorHttp ? X.CapacitorHttp : null;
+  }
+  async function getJSON(url, signal) {
+    var http = nativeHttp();
+    if (http) {
+      var req = http.get({ url: url, headers: { "Accept": "application/json", "User-Agent": "MonEquilibre/1.0 (app mobile)" }, connectTimeout: 9000, readTimeout: 9000 });
+      var res = await new Promise(function (resolve, reject) {
+        if (signal) signal.addEventListener("abort", function () { reject(new Error("abort")); });
+        req.then(resolve, reject);
+      });
+      var data = res.data;
+      if (typeof data === "string") { try { data = JSON.parse(data); } catch (e) { data = null; } }
+      return { status: res.status, data: data };
+    }
+    var r = await fetch(url, { signal: signal });
+    var d = null;
+    if (r.ok) d = await r.json();
+    return { status: r.status, data: d };
+  }
+
   function isValid(code) { return /^\d{8,14}$/.test(code); }
 
   /* Résultat : {status:"found", product} | {status:"unknown"} | {status:"offline"} */
@@ -69,11 +94,11 @@ window.Barcode = (function () {
     var ctl = new AbortController();
     var t = setTimeout(function () { ctl.abort(); }, 7000);
     try {
-      var r = await fetch("https://world.openfoodfacts.org/api/v2/product/" + encodeURIComponent(code) +
-        ".json?fields=product_name,product_name_fr,brands,nutriments,serving_quantity", { signal: ctl.signal });
+      var r = await getJSON("https://world.openfoodfacts.org/api/v2/product/" + encodeURIComponent(code) +
+        ".json?fields=product_name,product_name_fr,brands,nutriments,serving_quantity", ctl.signal);
       if (r.status === 404) return { status: "unknown" };
-      if (!r.ok) return { status: "offline" };
-      var d = await r.json();
+      if (r.status < 200 || r.status >= 300) return { status: "offline" };
+      var d = r.data;
       var p = d && d.product;
       var n = p && p.nutriments;
       if (!p || d.status === 0 || !n || n["energy-kcal_100g"] == null) return { status: "unknown" };
@@ -124,9 +149,9 @@ window.Barcode = (function () {
       var url = "https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=20" +
         "&tagtype_0=countries&tag_contains_0=contains&tag_0=france" +
         "&fields=code,product_name,product_name_fr,brands,nutriments,serving_quantity&search_terms=" + encodeURIComponent(query);
-      var r = await fetch(url, { signal: ctl.signal });
-      if (!r.ok) return { status: "offline" };
-      var d = await r.json();
+      var r = await getJSON(url, ctl.signal);
+      if (r.status < 200 || r.status >= 300 || !r.data) return { status: "offline" };
+      var d = r.data;
       var products = (d.products || []).map(function (p) { return mapProduct(p); }).filter(Boolean);
       return { status: "ok", products: products };
     } catch (e) {

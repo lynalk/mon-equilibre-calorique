@@ -443,7 +443,12 @@ function renderFoods() {
     var g = "";
     FOODS.forEach(function (f) { if (f.group !== g) { g = f.group; html += '<li class="group">' + esc(g) + "</li>"; } html += foodBtn(f); });
   } else {
-    var res = allFoods().filter(function (f) { return norm(f.name).indexOf(q) > -1 || norm(f.group || "").indexOf(q) > -1; });
+    /* chaque mot cherché doit apparaître dans le nom, le groupe ou les mots-clés (« galette bretonne », « crepe sucre ») */
+    var words = q.replace(/[^a-z0-9 %-]+/g, " ").split(/\s+/).filter(function (w) { return w.length > 1 || /\d/.test(w); });
+    var res = allFoods().filter(function (f) {
+      var hay = norm(f.name + " " + (f.group || "") + " " + (f.keys || "")).replace(/[^a-z0-9 %-]+/g, " ");
+      return words.length ? words.every(function (w) { return hay.indexOf(w) > -1 || (w.length > 3 && w.slice(-1) === "s" && hay.indexOf(w.slice(0, -1)) > -1); }) : hay.indexOf(q) > -1;
+    });
     html = res.length ? res.map(foodBtn).join("") : '<li class="group" style="text-transform:none;letter-spacing:0;font-weight:500;padding:12px">Aucun aliment trouvé. Essaie le code-barres, la photo ou la saisie libre.</li>';
   }
   $("foodList").innerHTML = html;
@@ -455,7 +460,7 @@ function offSearch() {
   if (offCtl) { offCtl.abort(); offCtl = null; }
   if (q.length < 3) { $("offBlock").hidden = true; return; }
   $("offBlock").hidden = false; $("offList").hidden = true;
-  if (offBlocked) { statusBox($("offStatus"), "", "La recherche des produits du commerce marche dans la version web de l'appli. Ici, scanne le code-barres."); return; }
+  if (offBlocked) { statusBox($("offStatus"), "", "Produits du commerce injoignables pour l'instant (connexion ?). Tu peux scanner le code-barres."); return; }
   statusBox($("offStatus"), "busy", "Recherche dans les produits du commerce…");
   offTimer = setTimeout(async function () {
     var ctl = offCtl = new AbortController();
@@ -463,8 +468,7 @@ function offSearch() {
     if (ctl !== offCtl) return;
     offCtl = null;
     if (res.status === "offline") {
-      offBlocked = true;
-      statusBox($("offStatus"), "", "La recherche des produits du commerce marche dans la version web de l'appli. Ici, scanne le code-barres.");
+      statusBox($("offStatus"), "", "Produits du commerce injoignables pour l'instant (connexion ?). Tu peux scanner le code-barres.");
       return;
     }
     if (res.status !== "ok") return;
