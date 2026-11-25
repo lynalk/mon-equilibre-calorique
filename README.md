@@ -9,7 +9,7 @@ Compteur de calories précis et personnalisé, en français, pensé pour le tél
 - **Profil et besoins** : métabolisme de base par Mifflin-St Jeor, ou Katch-McArdle si la masse grasse est connue, multiplié par le coefficient d'activité puis ajusté selon l'objectif (de −500 à +500 kcal). Plancher de 1 200 kcal (femme) / 1 500 kcal (homme). Macros : protéines 1,6 à 1,8 g/kg, lipides 30 % des calories, glucides pour le reste.
 - **Journal** : 4 repas, total du jour comparé à l'objectif, navigation entre les jours, reprise d'un repas de la veille en un geste.
 - **Ajout d'aliments**, quatre façons :
-  - **Chercher** : 333 aliments de base (fruits, légumes, féculents, viandes, poissons, laitages, boulangerie et pâtisserie, plats, boissons) avec portions, les récents, « Mes aliments », et les produits du commerce via Open Food Facts (version web).
+  - **Chercher** : 387 aliments de base (fruits, légumes, féculents, crêpes et galettes, viandes, poissons, laitages, boulangerie et pâtisserie, plats, desserts, boissons) avec portions, les récents, « Mes aliments », et les produits du commerce via Open Food Facts (version web et appli installée). La recherche trouve chaque mot tapé, dans le désordre (« galette bretonne », « crêpe sucre »).
   - **Code-barres** : photo du code-barres (appareil photo ou galerie) ou saisie des chiffres. Le produit est cherché dans tes aliments enregistrés, puis dans [Open Food Facts](https://world.openfoodfacts.org). S'il est introuvable, l'IA lit la photo de l'étiquette nutritionnelle. Chaque fiche est vérifiable avant d'être enregistrée.
   - **Photo IA** : photo de l'assiette, l'IA liste les aliments avec quantités et calories. Tout est modifiable (nom, grammes, kcal) avant l'ajout.
   - **Libre** : nom et calories, macros facultatives.
@@ -53,7 +53,7 @@ Icône et écran de démarrage : sources dans `assets/`, régénérés avec `npx
 
 - `index.html` : écrans et formulaires
 - `css/app.css` : thème clair/sombre
-- `js/foods.js` : base d'aliments intégrée (333 aliments)
+- `js/foods.js` : base d'aliments intégrée (387 aliments)
 - `img/` : logo Le Reformer by LK et icônes
 - `manifest.webmanifest` : installation sur l'écran d'accueil
 - `js/barcode.js` : décodage (BarcodeDetector, sinon ZXing) et recherche Open Food Facts

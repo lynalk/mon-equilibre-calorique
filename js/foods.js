@@ -1,7 +1,7 @@
 /* Base d'aliments intégrée, environ 330 aliments.
    Valeurs moyennes pour 100 g (ou 100 ml) : kcal | protéines | glucides | lipides | portions.
    Ordre de grandeur des tables Ciqual (ANSES) : valeurs indicatives, à affiner avec la table officielle.
-   Portions : "libellé:grammes;libellé:grammes". */
+   Portions : "libellé:grammes;libellé:grammes". Dernier champ facultatif : mots-clés pour la recherche. */
 (function () {
   var RAW = {
     "Fruits": [
@@ -69,6 +69,27 @@
       "Croque-monsieur|250|13|22|12|1 croque:150", "Pizza margherita|240|10|30|8|1 part:100;1/2 pizza:200", "Pizza jambon fromage|235|11|27|9|1 part:100;1/2 pizza:200",
       "Feuilleté au fromage|380|9|30|25|1 feuilleté:100", "Panini jambon fromage|270|13|30|10|1 panini:200"
     ],
+    "Crêpes et galettes": [
+      "Galette de sarrasin nature|165|5|32|1.6|1 galette:60|galette bretonne sarrasin ble noir",
+      "Galette complète (jambon, œuf, emmental)|215|12|14|12|1 galette:250|galette bretonne sarrasin ble noir complete",
+      "Galette jambon fromage|225|12|16|12.5|1 galette:220|galette bretonne sarrasin ble noir",
+      "Galette œuf fromage|220|11|15|13|1 galette:200|galette bretonne sarrasin ble noir",
+      "Galette champignons crème fromage|190|8|15|11|1 galette:240|galette bretonne sarrasin ble noir",
+      "Galette chèvre miel|255|10|22|14|1 galette:220|galette bretonne sarrasin ble noir",
+      "Galette saumon fumé crème|200|10|14|11.5|1 galette:220|galette bretonne sarrasin ble noir",
+      "Galette-saucisse|280|11|20|17.5|1 galette-saucisse:180|galette bretonne sarrasin saucisse",
+      "Crêpe au sucre|245|6|38|7.5|1 crêpe:70|crepe bretonne froment sucree",
+      "Crêpe beurre sucre|275|5.5|36|12|1 crêpe:75|crepe bretonne froment sucree",
+      "Crêpe chocolat-noisette|300|6|40|13|1 crêpe:90|crepe bretonne froment sucree nutella",
+      "Crêpe confiture|240|5|42|5.5|1 crêpe:85|crepe bretonne froment sucree",
+      "Crêpe caramel beurre salé|290|5|42|11.5|1 crêpe:90|crepe bretonne froment sucree",
+      "Crêpe banane chocolat|240|5|36|8.5|1 crêpe:130|crepe bretonne froment sucree",
+      "Crêpe suzette|260|5|36|10|1 crêpe:90|crepe froment sucree orange",
+      "Pancake|227|6|28|10|1 pancake:50|crepe americaine",
+      "Kouign-amann|420|5|45|24|1 part:100|gateau breton",
+      "Far breton|220|5.5|33|7|1 part:120|gateau breton pruneaux",
+      "Gâteau breton|440|5.5|50|24|1 part:60|gateau breton beurre"
+    ],
     "Viandes et charcuterie": [
       "Blanc de poulet cuit|150|31|0|2.5|1 filet:120", "Cuisse de poulet rôtie|200|26|0|10|1 cuisse:150", "Escalope de dinde cuite|135|29|0|1.5|1 escalope:120",
       "Steak de bœuf grillé|160|28|0|5|1 steak:120", "Steak haché 5 % cuit|160|26|0|6|1 steak:100", "Steak haché 15 % cuit|230|25|0|15|1 steak:100",
@@ -124,7 +145,11 @@
       "Biscuit sec type petit-beurre|440|7.5|75|12|1 biscuit:8", "Biscuit fourré au chocolat|470|6|70|19|1 biscuit:12", "Barre chocolatée caramel|450|4.5|65|18|1 barre:50",
       "Barre de céréales|400|6|70|10|1 barre:25", "Barre protéinée|360|30|35|10|1 barre:60", "Bonbons|350|0|85|0|1 poignée:30",
       "Chips|530|6|50|33|1 petit paquet:30", "Crackers apéritif|480|9|62|21|1 poignée:30", "Pop-corn sucré|420|4|75|12|1 cornet:50",
-      "Gâteau moelleux industriel|400|5|55|18|1 gâteau:30", "Compote à boire en gourde|70|0.3|16|0.2|1 gourde:90"
+      "Gâteau moelleux industriel|400|5|55|18|1 gâteau:30", "Compote à boire en gourde|70|0.3|16|0.2|1 gourde:90",
+      "Mousse au chocolat|240|5|26|13|1 pot:100", "Crème brûlée|300|4|25|20|1 ramequin:120", "Île flottante|150|5|22|4.5|1 portion:150",
+      "Riz au lait|130|3.5|21|3.5|1 pot:125", "Fondant au chocolat|400|5.5|40|25|1 part:80", "Clafoutis aux cerises|170|5|25|5.5|1 part:150",
+      "Tarte tatin|250|2.5|35|11|1 part:130", "Tiramisu|290|5|28|17|1 part:120", "Panna cotta|210|3|20|13|1 pot:120",
+      "Crème caramel|130|4|21|3.5|1 pot:100", "Fromage blanc aux fruits|100|5.5|14|2.5|1 pot:100"
     ],
     "Plats préparés": [
       "Lasagnes à la bolognaise|140|7|12|7|1 portion:300", "Hachis parmentier|120|6|10|6|1 portion:300", "Couscous royal|150|9|15|6|1 assiette:350",
@@ -133,7 +158,15 @@
       "Burger|250|13|25|11|1 burger:200", "Kebab complet|230|12|22|11|1 kebab:350", "Sushi saumon|150|6|28|2|1 pièce:30",
       "Maki|140|4|28|1|1 maki:20", "Poke bowl saumon|150|8|18|5|1 bol:400", "Wrap au poulet|200|11|22|7|1 wrap:200",
       "Taboulé|160|3|22|6.5|1 portion:200", "Salade composée au poulet|110|9|6|5.5|1 assiette:300", "Raviolis au bœuf en conserve|90|4|13|2.5|1 portion:300",
-      "Falafel|330|13|31|18|1 falafel:25", "Soupe miso|30|2|3|1|1 bol:250", "Velouté de potiron|45|1|6|2|1 bol:250"
+      "Falafel|330|13|31|18|1 falafel:25", "Soupe miso|30|2|3|1|1 bol:250", "Velouté de potiron|45|1|6|2|1 bol:250",
+      "Croque-madame|250|14|18|14|1 croque:220", "Tartiflette|180|8|11|12|1 portion:350", "Raclette (assiette complète)|200|10|12|13|1 assiette:400",
+      "Fondue savoyarde|300|17|12|21|1 portion:300|fromage", "Moussaka|130|7|8|8|1 portion:350", "Pot-au-feu|95|10|5|4|1 assiette:400",
+      "Choucroute garnie|150|8|4|11|1 assiette:400", "Cassoulet|140|8|11|7|1 assiette:350", "Gratin de pâtes|160|7|17|7|1 portion:300",
+      "Salade niçoise|100|6|5|6.5|1 assiette:350", "Salade César|150|9|7|10|1 assiette:300", "Soupe à l'oignon gratinée|90|4|9|4.5|1 bol:350",
+      "Quiche aux légumes|230|7|17|15|1 part:150", "Tarte salée au thon|240|9|19|14|1 part:150", "Omelette au fromage|200|13|1|16|1 omelette:150",
+      "Riz cantonais|160|5|24|5|1 assiette:300", "Pad thaï|150|7|20|5|1 assiette:350", "Nems|240|8|22|13|1 nem:60",
+      "Curry de poulet au riz|140|9|17|4|1 assiette:400", "Poulet basquaise|110|12|4|5|1 portion:300", "Spaghetti bolognaise|140|7|17|5|1 assiette:350",
+      "Saumon riz légumes|130|9|14|4.5|1 assiette:350", "Tajine de poulet|120|11|8|5|1 portion:350", "Hot-dog|260|10|25|13|1 hot-dog:150"
     ],
     "Boissons": [
       "Café noir|2|0.1|0|0|1 expresso:30;1 tasse:150", "Cappuccino|40|2|4|1.5|1 tasse:200", "Thé ou infusion|1|0|0.2|0|1 tasse:250",
@@ -156,7 +189,7 @@
       });
       i++;
       var slug = a[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      list.push({ id: "f-" + slug, group: group, name: a[0], kcal: +a[1], p: +a[2], c: +a[3], f: +a[4], portions: portions });
+      list.push({ id: "f-" + slug, group: group, name: a[0], kcal: +a[1], p: +a[2], c: +a[3], f: +a[4], portions: portions, keys: a[6] || "" });
     });
   });
   window.FOODS = list;
